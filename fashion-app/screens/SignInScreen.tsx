@@ -139,7 +139,7 @@ export default function SignInScreen() {
         </View>
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Bạn chưa có tài khoản?{" "}
+            <Text>Bạn chưa có tài khoản? </Text>
             <Text style={styles.signUpText} onPress={handleSignUp}>
               Đăng kí
             </Text>

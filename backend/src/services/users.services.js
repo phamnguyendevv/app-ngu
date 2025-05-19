@@ -142,17 +142,26 @@ let UserService = {
   },
   updateAddress: async (payload) => {
     try {
-      const { user_id, address_id, addressData } = payload;
+      const user_id = payload.userId;
+      const address_id = payload.id;
+      const { type, address, name, number, country, city } = payload;
       const user = await usersModel.findOne({ _id: user_id });
       if (!user) {
         throw new Error("Không tìm thấy người dùng ");
       }
-      const address = user.addresses.id(address_id);
-      if (!address) {
+      const addressData = user.addresses.id(address_id);
+      if (!addressData) {
         throw new Error("Không tìm thấy địa chỉ ");
       }
       // Update the address fields
-      address.set(addressData);
+      addressData.set({
+        type,
+        address,
+        name,
+        number,
+        country,
+        city,
+      });
       // Save the updated user document
       await user.save();
     } catch (error) {
@@ -278,13 +287,11 @@ let UserService = {
       const { password, email } = payload;
 
       const hashedPassword = await hashPassword(password);
-      console.log(hashedPassword);
       try {
         const user = await usersModel.findOneAndUpdate(
           { email },
           { password: hashedPassword }
         );
-        console.log(password);
         return {
           message: "Cập nhật mật khẩu thành công",
           status: 200,

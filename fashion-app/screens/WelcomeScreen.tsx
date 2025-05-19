@@ -56,7 +56,7 @@ export default function WelcomeScreen() {
 
       <View style={styles.contentContainer}>
         <Text style={styles.title}>Thứ khiến bạn đẹp nhất</Text>
-        The <Text style={styles.highlightedText}>Ứng dụng thời trang</Text>{" "}
+        <Text style={styles.highlightedText}>Ứng dụng thời trang</Text>
         <Text style={styles.description}>
           Đau đớn chính là điều chúng ta yêu thương, khi được gắn kết với nhau
           bởi tình bạn, nhưng chúng ta bị làm cho mệt mỏi bởi thời gian.

@@ -140,7 +140,7 @@ export default function CheckoutScreen() {
               />
               <View style={styles.productDetails}>
                 <Text style={styles.productName}>{item.productId.name}</Text>
-                <Text style={styles.productPrice}>${item.productId.price}</Text>
+                <Text style={styles.productPrice}>₫{item.productId.price}</Text>
                 <Text style={styles.productSize}>
                   Số lượng: {item.quantity}
                 </Text>
@@ -152,15 +152,15 @@ export default function CheckoutScreen() {
         <View style={styles.summaryContainer}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Tổng tiền sản phẩm</Text>
-            <Text style={styles.summaryValue}>${subtotal.toFixed(2)}</Text>
+            <Text style={styles.summaryValue}>₫{subtotal.toFixed(2)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Phí vận chuyển</Text>
-            <Text style={styles.summaryValue}>${deliveryFee}</Text>
+            <Text style={styles.summaryValue}>₫{deliveryFee}</Text>
           </View>
           <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Tổng chi phí</Text>
-            <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>₫{total.toFixed(2)}</Text>
           </View>
         </View>
       </ScrollView>

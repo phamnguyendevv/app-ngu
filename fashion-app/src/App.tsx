@@ -1,7 +1,7 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import WelcomeScreen from "./screens/WelcomeScreen";
-import OnboardingScreen from "./screens/OnboardingScreen";
+import WelcomeScreen from "../screens/WelcomeScreen";
+import OnboardingScreen from "../screens/OnboardingScreen";
 import {
   useFonts,
   Poppins_400Regular,
@@ -9,29 +9,31 @@ import {
   Poppins_600SemiBold,
   Poppins_700Bold,
 } from "@expo-google-fonts/poppins";
-import Onboarding2Screen from "./screens/Onboarding2Screen";
-import SignInScreen from "./screens/SignInScreen";
-import ForgotPasswordScreen from "./screens/ForgotPasswordScreen";
-import VerifyCodeScreen from "./screens/VerifyCodeScreen";
-import NewPasswordScreen from "./screens/NewPasswordScreen";
-import SignUpScreen from "./screens/SignUpScreen";
-import HomeScreen from "./screens/HomeScreen";
-import ProductDetailScreen from "./screens/ProductDetailScreen";
-import CartScreen from "./screens/CartScreen";
-import WishlistScreen from "./screens/WishlistScreen";
-import ProfileScreen from "./screens/ProfileScreen";
-import SearchScreen from "./screens/SearchScreen";
-import CategoryProductScreen from "./screens/CategoryProductScreen";
-import SettingsScreen from "./screens/SettingsScreen";
-import PasswordManagerScreen from "./screens/PasswordManagerScreen";
-import PaymentMethodsScreen from "./screens/PaymentMethodsScreen";
-import CheckoutScreen from "./screens/CheckoutScreen";
-import ShippingAddressScreen from "./screens/ShippingAddressScreen";
-import AddNewAddressScreen from "./screens/AddNewAddressScreen";
-import PaymentSuccessScreen from "./screens/PaymentSuccessScreen";
-import MyOrdersScreen from "./screens/MyOrdersScreen";
-import EditProfileScreen from "./screens/EditProfileScreen";
-import { UserProvider } from "./contexts/UserContext";
+import Onboarding2Screen from "../screens/Onboarding2Screen";
+import SignInScreen from "../screens/SignInScreen";
+import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
+import VerifyCodeScreen from "../screens/VerifyCodeScreen";
+import NewPasswordScreen from "../screens/NewPasswordScreen";
+import SignUpScreen from "../screens/SignUpScreen";
+import HomeScreen from "../screens/HomeScreen";
+import ProductDetailScreen from "../screens/ProductDetailScreen";
+import CartScreen from "../screens/CartScreen";
+import WishlistScreen from "../screens/WishlistScreen";
+import ProfileScreen from "../screens/ProfileScreen";
+import SearchScreen from "../screens/SearchScreen";
+import CategoryProductScreen from "../screens/CategoryProductScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import PasswordManagerScreen from "../screens/PasswordManagerScreen";
+import PaymentMethodsScreen from "../screens/PaymentMethodsScreen";
+import CheckoutScreen from "../screens/CheckoutScreen";
+import ShippingAddressScreen from "../screens/ShippingAddressScreen";
+import AddNewAddressScreen from "../screens/AddNewAddressScreen";
+import PaymentSuccessScreen from "../screens/PaymentSuccessScreen";
+import MyOrdersScreen from "../screens/MyOrdersScreen";
+import EditProfileScreen from "../screens/EditProfileScreen";
+import { UserProvider } from "../contexts/UserContext";
+import EditAddressScreen from "../screens/EditAddressScreen";
+import PaypalConfirmationScreen from "../screens/PaypalConfirmationScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -93,6 +95,11 @@ export default function App() {
           />
           <Stack.Screen name="MyOrders" component={MyOrdersScreen} />
           <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+          <Stack.Screen name="EditAddress" component={EditAddressScreen} />
+          <Stack.Screen
+            name="PaypalConfirmation"
+            component={PaypalConfirmationScreen}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>

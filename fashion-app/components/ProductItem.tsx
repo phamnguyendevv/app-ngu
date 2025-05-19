@@ -66,9 +66,21 @@ const ProductItem: React.FC<ProductItemProps> = ({
             onPress={() => onToggleFavorite(product.id)}
           >
             <Ionicons
-              name={product.isFavorite ? "heart" : "heart-outline"}
+              name={
+                isWishlistScreen
+                  ? "heart"
+                  : product.isFavorite
+                  ? "heart"
+                  : "heart-outline"
+              }
               size={20}
-              color={product.isFavorite ? "#FF6B6B" : "#666"}
+              color={
+                isWishlistScreen
+                  ? "#FF6B6B"
+                  : product.isFavorite
+                  ? "#FF6B6B"
+                  : "#666"
+              }
             />
           </TouchableOpacity>
         )}
@@ -79,7 +91,7 @@ const ProductItem: React.FC<ProductItemProps> = ({
           <Ionicons name="star" size={14} color="#FFD700" />
           <Text style={styles.ratingText}>{product.rating}</Text>
         </View>
-        <Text style={styles.productPrice}>${product.price.toFixed(2)}</Text>
+        <Text style={styles.productPrice}>₫{product.price.toFixed(2)}</Text>
       </TouchableOpacity>
     </View>
   );

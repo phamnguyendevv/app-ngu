@@ -22,16 +22,10 @@ export default function ShippingAddressScreen() {
     useNavigation<
       NativeStackNavigationProp<RootStackParamList, "ShippingAddress">
     >();
-  const {
-    userData: { id, email, isLoggedIn },
-    setUserData,
-    setAddresses,
-  } = useUser();
   const [selectedAddress, setSelectedAddress] = useState("1");
   const [loading, setLoading] = useState(true);
   const [address, setAddress] = useState<Address[]>([]);
-
-  const { userData, logout } = useUser();
+  const { userData, setAddresses } = useUser();
   const userId = userData.id;
 
   const fetchUserData = useCallback(async () => {
@@ -50,25 +44,14 @@ export default function ShippingAddressScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchUserData();
-      return () => {
-        console.log("Screen unfocused");
-      };
     }, [fetchUserData])
   );
+
   const handleEditAddress = (address: Address) => {
+    console.log("Edit address:", address);
     // Navigate to EditAddress screen with the address data
-    // navigation.navigate("EditAddress", { address });
+    navigation.navigate("EditAddress", { address });
   };
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchUserData();
-
-      return () => {
-        console.log("Screen unfocused");
-      };
-    }, [fetchUserData])
-  );
 
   const handleRemoveAddress = async (id: string) => {
     try {

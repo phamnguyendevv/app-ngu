@@ -70,7 +70,7 @@ export default function VerifyCodeScreen() {
           if (response.status === 200) {
             alert("Verification successful!");
 
-            navigation.navigate("NewPassword");
+            navigation.navigate("NewPassword", { email: email });
           } else {
             alert("Verification failed. Please try again.");
           }
@@ -101,7 +101,7 @@ export default function VerifyCodeScreen() {
 
         if (response.status === 200) {
           alert("Xác thực thành công");
-          navigation.navigate("NewPassword");
+          navigation.navigate("NewPassword", { email: email });
         } else {
           alert("Nhập mã thất bại");
         }

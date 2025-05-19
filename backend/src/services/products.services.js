@@ -5,6 +5,8 @@ const OrderModel = require("../models/order.model");
 const WishlistModel = require("../models/wishlist.model");
 const CartModel = require("../models/cart.model");
 const { ObjectId } = require("mongodb");
+const mongoose = require("mongoose");
+
 const ProductService = {
   //GET ALL PRODUCTS
   async getProducts(data) {
@@ -352,44 +354,41 @@ const ProductService = {
   // Get orders
   async getOrders(user_id) {
     try {
-      const orders = await OrderModel.find({ user: user_id }).populate({
-        path: "products.productId",
-        select: "name image price", // chỉ lấy các trường cần thiết
-      });
+      // 1. Lấy đơn hàng với populate sâu
+      const orders = await OrderModel.find({ user: user_id })
+        .populate({
+          path: "products.productId",
+          select: "name image price",
+          model: "Product",
+        })
+        .lean();
 
-      if (!orders || orders.length === 0) {
-        return {
-          message: "Không tìm thấy đơn hàng",
-          data: [],
-          status: 200, // Treat as success with empty data
-        };
-      }
-      console.log("orders", orders[0].products);
-
+      // 2. Format lại dữ liệu
       const formattedOrders = orders.map((order) => ({
-        id: order._id,
-        status: order.status,
-        totalPrice: order.totalPrice,
-        deliveryFee: order.deliveryFee,
-        paymentMethod: order.paymentMethod,
-        createdAt: order.createdAt,
-        shippingAddress: order.shippingAddress,
-        products: order.products.map((item) => ({
-          id: item._id,
-          quantity: item.quantity,
-          priceAtOrder: item.priceAtOrder,
-          product: {
-            id: item.productId._id,
-            name: item.productId.name,
-            image: item.productId.image,
-            price: item.productId.price,
-          },
-        })),
+        ...order,
+        id: order._id.toString(),
+        products: order.products.map((item) => {
+          // Đảm bảo có giá trị mặc định nếu populate không thành công
+          const product = item.productId || {};
+
+          return {
+            id: item._id.toString(),
+            quantity: item.quantity,
+            priceAtOrder: item.priceAtOrder,
+            product: {
+              id: product._id?.toString() || "unknown",
+              name: product.name || "Unknown Product",
+              image: product.image || "default-image-url.jpg",
+              price: product.price || 0,
+            },
+          };
+        }),
       }));
+      console.log("formattedOrders", formattedOrders[0].products);
 
       return {
         message: "Lấy đơn hàng thành công",
-        data: orders,
+        data: formattedOrders,
         status: 200,
       };
     } catch (err) {
@@ -407,48 +406,78 @@ const ProductService = {
       userId,
       cartItems,
       subtotal,
+      payment,
       deliveryFee,
       shippingAddress,
       paymentMethod,
     } = payload;
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
-      const user = await usersModel.findById(userId);
+      // 1. Kiểm tra người dùng
+      const user = await usersModel.findById(userId).session(session);
       if (!user) {
         throw new Error("Không tìm thấy người dùng");
       }
 
-      // Tạo danh sách sản phẩm cho đơn hàng
+      // 2. Kiểm tra giỏ hàng
+      if (!cartItems || cartItems.length === 0) {
+        throw new Error("Giỏ hàng trống");
+      }
+      console.log("cartItems", cartItems);
+
+      // 3. Tạo danh sách sản phẩm cho đơn hàng (FIXED)
       const orderProducts = cartItems.map((item) => ({
-        productId: item.productId._id,
+        productId: item.productId?._id || item.productId, // Xử lý cả 2 trường hợp
         quantity: item.quantity,
-        priceAtOrder: subtotal,
+        priceAtOrder: item.productId?.price || item.price, // Lưu giá từng sản phẩm
       }));
-      // Tạo đơn hàngs
 
-      const order = await OrderModel.create({
-        user: userId,
-        products: orderProducts,
-        deliveryFee,
-        totalPrice: subtotal + deliveryFee,
-        shippingAddress,
-        paymentMethod,
-        status: "Pending",
-      });
+      // 4. Tạo đơn hàng (FIXED)
+      const order = await OrderModel.create(
+        [
+          {
+            user: userId,
+            products: orderProducts,
+            deliveryFee,
+            payment,
+            totalPrice: subtotal + deliveryFee,
+            shippingAddress,
+            paymentMethod,
+            status: "Pending",
+          },
+        ],
+        { session }
+      );
 
-      // Thêm đơn hàng vào User
-      await usersModel.findByIdAndUpdate(userId, {
-        $push: { orders: order._id },
-      });
-      await CartModel.findOneAndUpdate({ user: userId }, { products: [] });
-      console.log("order", order);
+      // 5. Cập nhật user và giỏ hàng
+      await usersModel.findByIdAndUpdate(
+        userId,
+        { $push: { orders: order[0]._id } },
+        { session }
+      );
+
+      await CartModel.findOneAndUpdate(
+        { user: userId },
+        { products: [] },
+        { session }
+      );
+
+      await session.commitTransaction();
+
       return {
-        message: "Order created successfully",
-        data: order,
+        message: "Tạo đơn hàng thành công",
+        data: order[0],
         status: 200,
       };
     } catch (error) {
-      console.log("error creating orders", error);
-      throw new Error("Không thêm được đơn hàng");
+      await session.abortTransaction();
+      console.error("Lỗi khi tạo đơn hàng:", error);
+      throw new Error(error.message || "Không thêm được đơn hàng");
+    } finally {
+      session.endSession();
     }
   },
 

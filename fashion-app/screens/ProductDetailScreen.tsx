@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -24,87 +24,6 @@ import {
 } from "../api/product";
 import { useUser } from "../contexts/UserContext";
 import Toast from "react-native-toast-message";
-interface ToggleFavoriteProps {
-  userId: string;
-  product: Product;
-  isFavorite: boolean;
-  setIsFavorite: (value: boolean) => void;
-}
-
-const useToggleFavorite = ({
-  userId,
-  product,
-  isFavorite,
-  setIsFavorite,
-}: ToggleFavoriteProps) => {
-  const [loading, setLoading] = useState<boolean>(false);
-  const toggleFavorite = useCallback(
-    async (newFavoriteState: boolean) => {
-      if (!userId || !product.id) {
-        Toast.show({
-          type: "error",
-          text1: "Error",
-          text2: "User or product not found",
-        });
-        return;
-      }
-      try {
-        setLoading(true);
-
-        if (newFavoriteState) {
-          const response = await addWishList({
-            product_id: product.id,
-            user_id: userId,
-          });
-
-          if (response.status !== 200) {
-            throw new Error(response.message || "Failed to add to wishlist");
-          }
-
-          Toast.show({
-            type: "success",
-            text1: "Added to Wishlist",
-            text2: `${product.name} has been added.`,
-          });
-        } else {
-          // Xóa khỏi danh sách yêu thích
-          const response = await removeWishList({
-            product_id: product.id,
-            user_id: userId,
-          });
-
-          if (response.status !== 200) {
-            throw new Error(
-              response.message || "Failed to remove from wishlist"
-            );
-          }
-
-          Toast.show({
-            type: "success",
-            text1: "Removed from Wishlist",
-            text2: `${product.name} has been removed.`,
-          });
-        }
-
-        setIsFavorite(newFavoriteState);
-      } catch (error: any) {
-        console.error("Error toggling favorite:", error);
-        Toast.show({
-          type: "error",
-          text1: "Error",
-          text2:
-            error.message ||
-            `Failed to ${newFavoriteState ? "add to" : "remove from"} wishlist`,
-        });
-      } finally {
-        setLoading(false);
-      }
-    },
-    [userId, product, isFavorite, setIsFavorite]
-  );
-
-  return { toggleFavorite, loading };
-};
 
 export default function ProductDetailScreen() {
   const navigation = useNavigation();
@@ -117,62 +36,74 @@ export default function ProductDetailScreen() {
   const [expanded, setExpanded] = useState(false);
   const [mainImage, setMainImage] = useState(product.image); // State for main image
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
-  const { toggleFavorite, loading } = useToggleFavorite({
-    userId,
-    product,
-    isFavorite,
-    setIsFavorite,
-  });
+  const [isLoading, setIsLoading] = useState(false);
+  useEffect(() => {
+    const fetchWishlistStatus = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getWishList(userId);
+        if (response) {
+          const productsData = Array.isArray(response.data)
+            ? response.data
+            : [];
+          const currentProduct = productsData.find(
+            (p: { _id: string }) => p._id === product._id
+          );
+          setIsFavorite(!!currentProduct);
+        }
+      } catch (error) {
+        console.error("Error fetching wishlist:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // const toggleFavorite = async (id: string) => {
-  //   try {
-  //     const itemInWishLis = await getWishList(userId);
-  //     const productsData = Array.isArray(itemInWishLis.data)
-  //       ? itemInWishLis.data
-  //       : [];
-  //     const products = productsData.map((p: { _id: any }) => ({
-  //       ...p,
-  //       id: p._id,
-  //     }));
-  //     const currentProduct = products.find((p) => p.id === id);
-  //     if (!currentProduct) return;
+    fetchWishlistStatus();
+  }, [userId, product._id]);
 
-  //     if (newFavoriteState) {
-  //       const added = await addWishList({
-  //         product_id: id,
-  //         user_id: userId,
-  //       });
-  //       if (!added) throw new Error("lỗi khi thêm vào danh sách yêu thích");
-  //       Toast.show({
-  //         type: "success",
-  //         text1: "Thêm vào danh sách yêu thích",
-  //         text2: `${product.name} đã được thêm.`,
-  //       });
-  //     } else {
-  //       const removed = await removeWishList({
-  //         product_id: id,
-  //         user_id: userId,
-  //       });
-  //       if (!removed) throw new Error("Lỗi khi xóa khỏi danh sách yêu thích");
-  //       Toast.show({
-  //         type: "success",
-  //         text1: "Đã xóa khỏi danh sách",
-  //         text2: `${product.name} đã xóa khỏi danh sách.`,
-  //       });
-  //     }
+  const toggleFavorite = async () => {
+    if (isLoading) return;
 
-  //     setIsFavorite(newFavoriteState);
-  //   } catch (error) {
-  //     console.error("Lỗi khi ấn vào nút thích sản phẩm:", error);
-  //     Toast.show({
-  //       type: "error",
-  //       text1: "Error",
-  //       text2: `Lỗi ${
-  //         !isFavorite ? "thêm vào" : "xóa khỏi"
-  //       } danh sách yêu thích.`,
-  //     });
-  //   }
-  // };
+    try {
+      setIsLoading(true);
+      const newFavoriteState = !isFavorite;
+
+      if (newFavoriteState) {
+        const added = await addWishList({
+          product_id: product._id,
+          user_id: userId,
+        });
+        if (!added) throw new Error("Error adding to wishlist");
+        Toast.show({
+          type: "success",
+          text1: "Added to wishlist",
+          text2: `${product.name} has been added.`,
+        });
+      } else {
+        const removed = await removeWishList({
+          product_id: product._id,
+          user_id: userId,
+        });
+        if (!removed) throw new Error("Error removing from wishlist");
+        Toast.show({
+          type: "success",
+          text1: "Removed from wishlist",
+          text2: `${product.name} has been removed.`,
+        });
+      }
+
+      setIsFavorite(newFavoriteState);
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: `Failed to ${isFavorite ? "remove from" : "add to"} wishlist.`,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAddToCart = async () => {
     setAdded(true);
@@ -222,7 +153,8 @@ export default function ProductDetailScreen() {
         <Text style={styles.headerTitle}>Chi tiết sản phẩm</Text>
         <TouchableOpacity
           style={styles.favoriteButton}
-          onPress={() => product._id && toggleFavorite(!isFavorite)}
+          onPress={toggleFavorite}
+          disabled={isLoading}
         >
           <Ionicons
             name={isFavorite ? "heart" : "heart-outline"}

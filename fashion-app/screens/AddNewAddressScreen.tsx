@@ -28,7 +28,6 @@ export default function AddNewAddressScreen() {
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
-  const [isDefault, setIsDefault] = useState(false);
 
   const addressTypes = ["Home", "Office", "Other"];
 

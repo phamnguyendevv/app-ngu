@@ -42,6 +42,11 @@ const orderSchema = new mongoose.Schema(
       min: [0, "Delivery fee cannot be negative"],
       default: 25.0, // Giá trị mặc định, có thể thay đổi theo logic
     },
+    payment: {
+      type: String,
+      required: true,
+      enum: ["Cash", "PayPal"],
+    },
     totalPrice: {
       type: Number,
       required: true,

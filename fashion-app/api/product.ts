@@ -103,3 +103,15 @@ export const getOrders = async (user_id: string) => {
     throw error;
   }
 };
+
+export const addOrderPayPal = async (amount: any) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/order/paypal/create-order`,
+      amount
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

@@ -93,20 +93,35 @@ export default function PaymentMethodsScreen() {
         );
         const deliveryFee = 25.0;
         const total = subtotal + deliveryFee;
-        const orderDetails = {
-          userId: id,
-          cartItems,
-          subtotal,
-          deliveryFee,
-          total,
-          shippingAddress: addresses,
-          paymentMethod: selectedMethod,
-        };
+
         if (selectedMethod === "paypal") {
+          const orderDetails = {
+            userId: id,
+            cartItems,
+            payment: "Paypal",
+            subtotal,
+            deliveryFee,
+            total,
+            shippingAddress: addresses,
+            paymentMethod: selectedMethod,
+          };
           // Handle PayPal payment
           console.log("Processing PayPal payment...");
+          navigation.navigate("PaypalConfirmation", {
+            orderData: orderDetails,
+          });
         }
         if (selectedMethod === "cash") {
+          const orderDetails = {
+            userId: id,
+            cartItems,
+            payment: "Cash",
+            subtotal,
+            deliveryFee,
+            total,
+            shippingAddress: addresses,
+            paymentMethod: selectedMethod,
+          };
           // Handle cash payment
 
           const oder = addOrder(orderDetails);
@@ -116,7 +131,7 @@ export default function PaymentMethodsScreen() {
         console.error("Lỗi khi order", error);
       }
 
-      navigation.navigate("PaymentSuccess");
+      console.log("Selected payment method:", selectedMethod);
     } else {
       alert("Chọn phương thức thanh toán");
     }

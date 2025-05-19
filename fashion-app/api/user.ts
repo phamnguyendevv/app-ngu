@@ -101,3 +101,13 @@ export const removeAddress = async (data: any): Promise<any> => {
     throw new Error("Failed to remove address");
   }
 };
+
+export const updateAddress = async (data: any): Promise<any> => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/address`, data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating address:", error);
+    throw new Error("Failed to update address");
+  }
+};

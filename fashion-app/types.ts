@@ -5,7 +5,7 @@ export type RootStackParamList = {
   SignIn: undefined;
   SignUp: undefined;
   ForgotPassword: undefined;
-  NewPassword: undefined;
+  NewPassword: { email: string }; // Định nghĩa NewPassword nhận tham số là một đối tượng có email
   ResetPassword: undefined;
   VerifyCode: { email: string }; // Định nghĩa VerifyCode nhận tham số là một đối tượng có email
   Home: undefined;
@@ -35,5 +35,7 @@ export type RootStackParamList = {
   MyOrders: undefined;
   TrackOrder: any;
   EditProfile: undefined;
+  EditAddress: { address: any }; // Định nghĩa EditAddress nhận tham số là một đối tượng có address
   FilterScreen: undefined;
+  PaypalConfirmation: { orderData: any }; // Định nghĩa PaypalConfirmation nhận tham số là một đối tượng có orderData
 };

@@ -84,20 +84,38 @@ export type Category = {
 };
 
 export type OrderItem = {
+  image: string | undefined;
+  products: any;
   id: string;
   quantity: number;
   priceAtOrder: number;
   product: Product;
 };
 
-export type Order = {
+export interface Order {
   id: string;
   status: string;
   totalPrice: number;
   deliveryFee: number;
   paymentMethod: string;
-  createdAt: string;
-  shippingAddress: Address;
-  products: OrderItem[];
-  rating?: number;
-};
+  createdAt: Date;
+  shippingAddress: {
+    name: string;
+    number: string;
+    city: string;
+    country: string;
+    address: string;
+    type: string;
+  };
+  products: Array<{
+    id: string;
+    quantity: number;
+    priceAtOrder: number;
+    product: {
+      id: string;
+      name: string;
+      image: string;
+      price: number;
+    };
+  }>;
+}

@@ -15,7 +15,6 @@ import { Ionicons, Feather } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types";
-import { useUser } from "../contexts/UserContext";
 import { rePassword } from "../api/user";
 
 export default function NewPasswordScreen() {
@@ -23,10 +22,10 @@ export default function NewPasswordScreen() {
     useNavigation<
       NativeStackNavigationProp<RootStackParamList, "NewPassword">
     >();
-  const { userData } = useUser();
-  const {
-    userData: { email, isLoggedIn },
-  } = useUser();
+
+  const route =
+    useRoute<RouteProp<{ NewPassword: { email: string } }, "NewPassword">>();
+  const email = route.params?.email || "";
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -36,6 +35,7 @@ export default function NewPasswordScreen() {
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
+  console.log("email", email);
 
   const toggleConfirmPasswordVisibility = () => {
     setConfirmPasswordVisible(!confirmPasswordVisible);
@@ -56,19 +56,17 @@ export default function NewPasswordScreen() {
 
     try {
       const reponse = await rePassword({ email: email, password: password });
-      Alert.alert("Success", "Đặt lại mật khẩu thành công");
+      // Here you would implement the actual password update logic
+      Alert.alert("Success", "Mật khẩu của bạn đã được cập nhật thành công", [
+        {
+          text: "OK",
+          onPress: () => navigation.navigate("SignIn"),
+        },
+      ]);
     } catch (error) {
       Alert.alert("Error", "Đặt lại mật khẩu thất bại");
       return;
     }
-
-    // Here you would implement the actual password update logic
-    Alert.alert("Success", "Mật khẩu của bạn đã được cập nhật thành công", [
-      {
-        text: "OK",
-        onPress: () => navigation.navigate("SignIn"),
-      },
-    ]);
   };
 
   return (

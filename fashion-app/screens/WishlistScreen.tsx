@@ -11,6 +11,7 @@ import {
   ScrollView,
   FlatList,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons, Feather } from "@expo/vector-icons";
@@ -21,6 +22,7 @@ import { useUser } from "../contexts/UserContext";
 import { addWishList, getWishList, removeWishList } from "../api/product";
 import ProductItem from "../components/ProductItem";
 import { Product } from "../type/productType";
+import Toast from "react-native-toast-message";
 
 const { width } = Dimensions.get("window");
 const productWidth = (width - 40 - 10) / 2; // 40 for padding, 10 for gap
@@ -33,52 +35,72 @@ export default function WishlistScreen() {
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
   const { userData } = useUser();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const userId = userData.id;
-
-  const fetchProductData = useCallback(async () => {
+  const fetchWishlist = useCallback(async () => {
     try {
-      setLoading(true);
-      const user_id = userData.id;
-      const data = await getWishList(user_id);
-      const productsData = Array.isArray(data.data) ? data.data : [];
-      const products = productsData.map((p: { _id: any }) => ({
-        ...p,
-        id: p._id,
-      }));
-      setWishlistItems(products);
-      console.log("Products fetched successfully:", products);
+      const response = await getWishList(userId);
+      const productsData = Array.isArray(response?.data) ? response.data : [];
+
+      const formattedProducts = productsData.map(
+        (product: { _id: any; id: any }) => ({
+          ...product,
+          id: product._id ?? product.id, // Handle both _id and id cases
+        })
+      );
+
+      setWishlistItems(formattedProducts);
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      console.error("Error fetching wishlist:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load wishlist",
+      });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }, [userData.id]);
+  }, [userId]);
+  // Refresh control handler
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchWishlist();
+  }, [fetchWishlist]);
 
   useFocusEffect(
     useCallback(() => {
-      fetchProductData();
-      return () => {
-        console.log("Screen unfocused");
-      };
-    }, [fetchProductData])
+      fetchWishlist();
+      return () => {}; // Cleanup if needed
+    }, [fetchWishlist])
   );
 
-  const toggleFavorite = async (id: string) => {
-    const currentProduct = wishlistItems.find((p) => p.id === id);
-    if (!currentProduct) return;
-
+  const handleRemoveFromWishlist = async (productId: string) => {
     try {
-      console.log("Toggling favorite for product:", currentProduct);
-      const removed = await removeWishList({
-        product_id: id,
+      const success = await removeWishList({
+        product_id: productId,
         user_id: userId,
       });
-      if (!removed) throw new Error("Failed to remove from wishlist");
 
-      setWishlistItems((prev) => prev.filter((product) => product.id !== id));
+      if (success) {
+        setWishlistItems((prev) =>
+          prev.filter((item) => item.id !== productId)
+        );
+        Toast.show({
+          type: "success",
+          text1: "Removed",
+          text2: "Product removed from wishlist",
+        });
+      } else {
+        throw new Error("Failed to remove");
+      }
     } catch (error) {
-      console.error("Failed to remove from wishlist:", error);
-      // TODO: Show error notification to user
+      console.error("Error removing from wishlist:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to remove product",
+      });
     }
   };
 
@@ -91,12 +113,32 @@ export default function WishlistScreen() {
   }) => (
     <ProductItem
       product={item}
-      onToggleFavorite={toggleFavorite}
+      onToggleFavorite={handleRemoveFromWishlist}
       index={index}
       isLastInRow={index % 2 === 1}
       isWishlistScreen={true}
     />
   );
+  const renderEmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="heart-outline" size={48} color="#ccc" />
+      <Text style={styles.emptyText}>Your wishlist is empty</Text>
+      <TouchableOpacity
+        style={styles.browseButton}
+        onPress={() => navigation.navigate("Home")}
+      >
+        <Text style={styles.browseButtonText}>Browse Products</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#8B6E4E" style={styles.loader} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -117,8 +159,14 @@ export default function WishlistScreen() {
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.productRow}
-        contentContainerStyle={styles.productList}
+        contentContainerStyle={[
+          styles.productList,
+          wishlistItems.length === 0 && styles.emptyListContainer,
+        ]}
+        ListEmptyComponent={renderEmptyComponent}
         showsVerticalScrollIndicator={false}
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
       />
       <View style={styles.bottomNavigation}>
         <TouchableOpacity
@@ -281,5 +329,35 @@ const styles = StyleSheet.create({
   },
   activeNavItem: {
     borderRadius: 15,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#666",
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  browseButton: {
+    backgroundColor: "#8B6E4E",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  browseButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyListContainer: {
+    flex: 1,
   },
 });
